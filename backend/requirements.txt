@@ -1,0 +1,13 @@
+
+fastapi
+uvicorn[standard]
+python-dotenv
+openai
+gspread
+oauth2client
+numpy
+faiss-cpu
+PyPDF2
+python-docx
+pandas
+openpyxl

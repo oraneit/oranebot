@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang='en'>
+<head>
+  <meta charset='UTF-8'/>
+  <meta name='viewport' content='width=device-width, initial-scale=1.0'/>
+  <title>Neha from Orane Chatbot</title>
+  <link href='https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap' rel='stylesheet'/>
+  <style>
+    :root { --brand-color: #F76C1B; --brand-dark: #333333; --background: #FFFFFF; --incoming-bg: #f1f1f1; --outgoing-bg: #d1e7dd; }
+    body { font-family: 'Inter', sans-serif; margin: 0; }
+    #chat-button { position: fixed; bottom: 20px; right: 20px; width: 60px; height: 60px; border-radius: 50%; background: var(--brand-color); box-shadow: 0 4px 8px rgba(0,0,0,0.2); cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 1000; }
+    #chat-button img { width: 30px; height: 30px; }
+    #chat-widget { position: fixed; bottom: 90px; right: 20px; width: 350px; max-height: 500px; background: var(--background); border-radius: 16px; box-shadow: 0 4px 16px rgba(0,0,0,0.2); display: none; flex-direction: column; overflow: hidden; z-index: 1000; }
+    #chat-header { background: var(--brand-color); color: #fff; padding: 12px; display: flex; justify-content: space-between; align-items: center; }
+    #chat-header .title { font-weight: 600; }
+    #chat-header .close-btn { cursor: pointer; font-size: 1.2rem; }
+    #chat-messages { flex: 1; padding: 12px; overflow-y: auto; background: #fafafa; }
+    .msg { margin: 6px 0; max-width: 80%; padding: 10px 14px; border-radius: 12px; line-height: 1.4; }
+    .msg.user { margin-left: auto; background: var(--outgoing-bg); color: var(--brand-dark); }
+    .msg.bot { margin-right: auto; background: var(--incoming-bg); color: var(--brand-dark); }
+    .typing { font-style: italic; color: #888888; }
+    #chat-input { display: flex; border-top: 1px solid #e0e0e0; }
+    #chat-input select { border: none; background: transparent; color: #333; font-size: 0.9rem; margin: 8px; }
+    #chat-input input { flex: 1; border: none; padding: 12px; font-size: 1rem; }
+    #chat-input input:focus { outline: none; }
+    #chat-input button { border: none; background: var(--brand-color); color: #fff; padding: 0 16px; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <div id='chat-button'>
+    <img src='https://orane.com/assets/chat-icon.svg' alt='Chat'/>
+  </div>
+  <div id='chat-widget'>
+    <div id='chat-header'>
+      <span class='title'>Neha from Orane</span>
+      <span id='close-btn' class='close-btn'>&times;</span>
+    </div>
+    <div id='chat-messages'></div>
+    <div id='chat-input'>
+      <select id='language-select'>
+        <option value='en' selected>EN</option>
+        <option value='hi'>HI</option>
+      </select>
+      <input type='text' id='input' placeholder='Type your message...' disabled/>
+      <button id='send' disabled>Send</button>
+    </div>
+  </div>
+  <script>
+    (function(){
+      const BASE_URL = window.location.hostname.includes('localhost') || window.location.hostname.includes('127.0.0.1') ? 'http://localhost:8000' : 'https://prodifyteam-chatbot.onrender.com';
+      const chatBtn = document.getElementById('chat-button');
+      const widget = document.getElementById('chat-widget');
+      const closeBtn = document.getElementById('close-btn');
+      const messagesEl = document.getElementById('chat-messages');
+      const inputEl = document.getElementById('input');
+      const sendBtn = document.getElementById('send');
+      const langSelect = document.getElementById('language-select');
+      let sessionId = sessionStorage.getItem('session_id') || crypto.randomUUID();
+      sessionStorage.setItem('session_id', sessionId);
+      let leadStep = 0;
+      const leadFields = [{key:'name', question:'Hello! I am Neha, your Orane counselor. May I know your name?'}, {key:'email', question:'Thanks! Could you please share your email address?'}, {key:'course', question:'Awesome! Which Orane course are you interested in?'}, {key:'phone', question:'Finally, may I have your phone number to reach you?'}];
+      const leadData = {};
+      function toggleChat(){ widget.style.display = widget.style.display === 'flex' ? 'none' : 'flex'; if(widget.style.display === 'flex'){ startChat(); }}
+      chatBtn.addEventListener('click', toggleChat);
+      closeBtn.addEventListener('click', toggleChat);
+      sendBtn.addEventListener('click', ()=>{ const text = inputEl.value.trim(); if(!text) return; handleUserInput(text); });
+      inputEl.addEventListener('keypress', e=>{ if(e.key === 'Enter'){ e.preventDefault(); sendBtn.click(); }});
+      function addMessage(text, cls='bot'){ const el = document.createElement('div'); el.className = 'msg ' + cls; el.textContent = text; messagesEl.appendChild(el); messagesEl.scrollTop = messagesEl.scrollHeight; }
+      function setInput(enabled){ inputEl.disabled = !enabled; sendBtn.disabled = !enabled; if(enabled) inputEl.focus(); }
+      function startChat(){ messagesEl.innerHTML = ''; leadStep = 0; addMessage(leadFields[leadStep].question); setInput(true); }
+      async function handleUserInput(text){ addMessage(text,'user'); setInput(false); if(leadStep < leadFields.length){ leadData[leadFields[leadStep].key] = text; leadStep++; if(leadStep < leadFields.length){ addMessage(leadFields[leadStep].question); setInput(true); } else { addMessage('Submitting your details...'); try{ const res = await fetch(`${BASE_URL}/lead`, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({session_id:sessionId, ...leadData})}); if(res.ok){ addMessage('Thank you! How can I assist you with Orane courses today?'); } else { addMessage('Sorry, failed to submit your details.'); } } catch{ addMessage('Network error.'); } setInput(true); } } else { addMessage('...', 'typing'); try{ const res = await fetch(`${BASE_URL}/chat`, {method:'POST', headers:{'Content-Type':'application/json','Accept-Language': langSelect.value}, body:JSON.stringify({session_id:sessionId, message:text})}); const data = await res.json(); const typingEl = messagesEl.querySelector('.typing'); if(typingEl) typingEl.remove(); addMessage(data.reply); } catch{ const typingEl = messagesEl.querySelector('.typing'); if(typingEl) typingEl.remove(); addMessage('Something went wrong. Please try again later.'); } setInput(true); }}
+    })();
+  </script>
+</body>
+</html>
