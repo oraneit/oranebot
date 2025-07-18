@@ -1,75 +1,379 @@
+
+
 <!DOCTYPE html>
-<html lang='en'>
+<html lang="en">
 <head>
-  <meta charset='UTF-8'/>
-  <meta name='viewport' content='width=device-width, initial-scale=1.0'/>
-  <title>Neha from Orane Chatbot</title>
-  <link href='https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap' rel='stylesheet'/>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="theme-color" content="#052542"/>
+  <title>Prodify Chat</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
   <style>
-    :root { --brand-color: #F76C1B; --brand-dark: #333333; --background: #FFFFFF; --incoming-bg: #f1f1f1; --outgoing-bg: #d1e7dd; }
-    body { font-family: 'Inter', sans-serif; margin: 0; }
-    #chat-button { position: fixed; bottom: 20px; right: 20px; width: 60px; height: 60px; border-radius: 50%; background: var(--brand-color); box-shadow: 0 4px 8px rgba(0,0,0,0.2); cursor: pointer; display: flex; align-items: center; justify-content: center; z-index: 1000; }
-    #chat-button img { width: 30px; height: 30px; }
-    #chat-widget { position: fixed; bottom: 90px; right: 20px; width: 350px; max-height: 500px; background: var(--background); border-radius: 16px; box-shadow: 0 4px 16px rgba(0,0,0,0.2); display: none; flex-direction: column; overflow: hidden; z-index: 1000; }
-    #chat-header { background: var(--brand-color); color: #fff; padding: 12px; display: flex; justify-content: space-between; align-items: center; }
-    #chat-header .title { font-weight: 600; }
-    #chat-header .close-btn { cursor: pointer; font-size: 1.2rem; }
-    #chat-messages { flex: 1; padding: 12px; overflow-y: auto; background: #fafafa; }
-    .msg { margin: 6px 0; max-width: 80%; padding: 10px 14px; border-radius: 12px; line-height: 1.4; }
-    .msg.user { margin-left: auto; background: var(--outgoing-bg); color: var(--brand-dark); }
-    .msg.bot { margin-right: auto; background: var(--incoming-bg); color: var(--brand-dark); }
-    .typing { font-style: italic; color: #888888; }
-    #chat-input { display: flex; border-top: 1px solid #e0e0e0; }
-    #chat-input select { border: none; background: transparent; color: #333; font-size: 0.9rem; margin: 8px; }
-    #chat-input input { flex: 1; border: none; padding: 12px; font-size: 1rem; }
-    #chat-input input:focus { outline: none; }
-    #chat-input button { border: none; background: var(--brand-color); color: #fff; padding: 0 16px; cursor: pointer; }
+    body {
+      margin: 0;
+      padding: 0;
+      height: 100vh;
+      font-family: 'Inter', sans-serif;
+      background: #e5ddd5;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    #chat-container {
+      width: 100%;
+      max-width: 600px;
+      height: 100vh;
+      max-height: 100vh;
+      background: #fff;
+      display: flex;
+      flex-direction: column;
+      border-left: 1px solid #ccc;
+      border-right: 1px solid #ccc;
+    }
+
+    #messages {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px;
+      background: #f5f5f5;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .msg {
+      max-width: 80%;
+      padding: 10px 14px;
+      margin: 4px 0;
+      border-radius: 8px;
+      font-size: 1.05rem; /* Increased by ~2 points */
+      line-height: 1.5;
+      word-wrap: break-word;
+      white-space: pre-wrap; /* Respects newlines and spaces */
+    }
+
+    .user {
+      align-self: flex-end;
+      background: #dcf8c6;
+      color: #000;
+    }
+
+    .bot {
+      align-self: flex-start;
+      background: #eeeeee;
+      color: #111;
+      border: 1px solid #ccc;
+    }
+
+    .bot strong {
+      color: #052542; /* Prodify brand color for emphasis */
+    }
+
+    .bot p {
+        margin: 0.5em 0;
+    }
+
+    .typing-indicator {
+        align-self: flex-start;
+        font-style: italic;
+        color: #888;
+        margin: 4px 0;
+    }
+
+    .error-message {
+        text-align: center;
+        color: #c0392b;
+        background-color: #f9e0de;
+        border: 1px solid #e74c3c;
+        padding: 10px;
+        margin: 8px 16px;
+        border-radius: 6px;
+    }
+
+    #input-area {
+      display: flex;
+      padding: 10px;
+      border-top: 1px solid #ccc;
+      background: #f0f0f0;
+    }
+
+    #input {
+      flex: 1;
+      padding: 10px;
+      font-size: 1rem;
+      border: 1px solid #a5c0df;
+      border-radius: 20px;
+      transition: border-color 0.2s;
+    }
+    #input:focus {
+        outline: none;
+        border-color: #052542;
+    }
+    #input:disabled {
+        background-color: #f5f5f5;
+    }
+
+    #send {
+      margin-left: 8px;
+      padding: 0 16px;
+      border: none;
+      border-radius: 20px;
+      background: #052542;
+      color: white;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+    #send:disabled {
+        background-color: #a5c0df;
+        cursor: not-allowed;
+    }
+
+    form#lead-form {
+      background: #fff;
+      padding: 16px;
+      margin-top: 10px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+    }
+
+    form#lead-form input,
+    form#lead-form textarea {
+      box-sizing: border-box;
+      width: 100%;
+      margin-bottom: 8px;
+      padding: 12px; /* Slightly more padding */
+      font-size: 1.05rem; /* Match new message font size */
+      border: 2px solid #a5c0df; /* Thicker border, matching input focus color */
+      border-radius: 8px; /* Slightly more rounded */
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    form#lead-form input:focus,
+    form#lead-form textarea:focus {
+      outline: none;
+      border-color: #052542; /* Darker border on focus */
+      box-shadow: 0 0 0 2px rgba(5, 37, 66, 0.2); /* Subtle shadow on focus */
+    }
+
+    .language-buttons button {
+        background-color: #fff;
+        border: 1px solid #052542;
+        color: #052542;
+        padding: 10px 15px;
+        margin: 5px;
+        border-radius: 20px;
+        cursor: pointer;
+        font-weight: 500;
+        transition: background-color 0.2s, color 0.2s;
+    }
+    .language-buttons button:hover {
+        background-color: #052542;
+        color: #fff;
+    }
+
+    @media screen and (max-width: 480px) {
+      #chat-container {
+        width: 100%;
+        height: 100vh;
+        border-radius: 0;
+      }
+    }
   </style>
 </head>
 <body>
-  <div id='chat-button'>
-    <img src='https://orane.com/assets/chat-icon.svg' alt='Chat'/>
-  </div>
-  <div id='chat-widget'>
-    <div id='chat-header'>
-      <span class='title'>Neha from Orane</span>
-      <span id='close-btn' class='close-btn'>&times;</span>
-    </div>
-    <div id='chat-messages'></div>
-    <div id='chat-input'>
-      <select id='language-select'>
-        <option value='en' selected>EN</option>
-        <option value='hi'>HI</option>
-      </select>
-      <input type='text' id='input' placeholder='Type your message...' disabled/>
-      <button id='send' disabled>Send</button>
+  <div id="chat-container">
+    <div id="messages"></div>
+    <div id="input-area">
+      <input id="input" placeholder="Type a message…" autocomplete="off" disabled />
+      <button id="send" disabled>Send</button>
     </div>
   </div>
+
   <script>
-    (function(){
-      const BASE_URL = window.location.hostname.includes('localhost') || window.location.hostname.includes('127.0.0.1') ? 'http://localhost:8000' : 'https://prodifyteam-chatbot.onrender.com';
-      const chatBtn = document.getElementById('chat-button');
-      const widget = document.getElementById('chat-widget');
-      const closeBtn = document.getElementById('close-btn');
-      const messagesEl = document.getElementById('chat-messages');
-      const inputEl = document.getElementById('input');
-      const sendBtn = document.getElementById('send');
-      const langSelect = document.getElementById('language-select');
-      let sessionId = sessionStorage.getItem('session_id') || crypto.randomUUID();
-      sessionStorage.setItem('session_id', sessionId);
-      let leadStep = 0;
-      const leadFields = [{key:'name', question:'Hello! I am Neha, your Orane counselor. May I know your name?'}, {key:'email', question:'Thanks! Could you please share your email address?'}, {key:'course', question:'Awesome! Which Orane course are you interested in?'}, {key:'phone', question:'Finally, may I have your phone number to reach you?'}];
-      const leadData = {};
-      function toggleChat(){ widget.style.display = widget.style.display === 'flex' ? 'none' : 'flex'; if(widget.style.display === 'flex'){ startChat(); }}
-      chatBtn.addEventListener('click', toggleChat);
-      closeBtn.addEventListener('click', toggleChat);
-      sendBtn.addEventListener('click', ()=>{ const text = inputEl.value.trim(); if(!text) return; handleUserInput(text); });
-      inputEl.addEventListener('keypress', e=>{ if(e.key === 'Enter'){ e.preventDefault(); sendBtn.click(); }});
-      function addMessage(text, cls='bot'){ const el = document.createElement('div'); el.className = 'msg ' + cls; el.textContent = text; messagesEl.appendChild(el); messagesEl.scrollTop = messagesEl.scrollHeight; }
-      function setInput(enabled){ inputEl.disabled = !enabled; sendBtn.disabled = !enabled; if(enabled) inputEl.focus(); }
-      function startChat(){ messagesEl.innerHTML = ''; leadStep = 0; addMessage(leadFields[leadStep].question); setInput(true); }
-      async function handleUserInput(text){ addMessage(text,'user'); setInput(false); if(leadStep < leadFields.length){ leadData[leadFields[leadStep].key] = text; leadStep++; if(leadStep < leadFields.length){ addMessage(leadFields[leadStep].question); setInput(true); } else { addMessage('Submitting your details...'); try{ const res = await fetch(`${BASE_URL}/lead`, {method:'POST', headers:{'Content-Type':'application/json'}, body:JSON.stringify({session_id:sessionId, ...leadData})}); if(res.ok){ addMessage('Thank you! How can I assist you with Orane courses today?'); } else { addMessage('Sorry, failed to submit your details.'); } } catch{ addMessage('Network error.'); } setInput(true); } } else { addMessage('...', 'typing'); try{ const res = await fetch(`${BASE_URL}/chat`, {method:'POST', headers:{'Content-Type':'application/json','Accept-Language': langSelect.value}, body:JSON.stringify({session_id:sessionId, message:text})}); const data = await res.json(); const typingEl = messagesEl.querySelector('.typing'); if(typingEl) typingEl.remove(); addMessage(data.reply); } catch{ const typingEl = messagesEl.querySelector('.typing'); if(typingEl) typingEl.remove(); addMessage('Something went wrong. Please try again later.'); } setInput(true); }}
-    })();
+    document.addEventListener('DOMContentLoaded', () => {
+        const messagesEl = document.getElementById('messages');
+        const inputEl = document.getElementById('input');
+        const sendBtn = document.getElementById('send');
+
+        const BASE_URL = 'https://orane-chatbot-backend.onrender.com';
+
+        let sessionId = sessionStorage.getItem("session_id");
+        if (!sessionId) {
+            sessionId = crypto.randomUUID();
+            sessionStorage.setItem("session_id", sessionId);
+        }
+
+        let userName = sessionStorage.getItem("user_name"); // Store user's name
+
+        function setInputState(enabled, placeholder = "Type a message…") {
+            inputEl.disabled = !enabled;
+            sendBtn.disabled = !enabled;
+            inputEl.placeholder = placeholder;
+        }
+
+        function addMessage(text, cls = 'bot') {
+            const msgDiv = document.createElement('div');
+            msgDiv.className = `msg ${cls}`;
+            
+            // Sanitize and format the text
+            let formattedText = formatBotMessage(text);
+            
+            // Personalize bot messages if userName is available and it's a bot message
+            if (cls === 'bot' && userName) {
+                formattedText = formattedText.replace("Hello!", `Hello ${userName}!`);
+                formattedText = formattedText.replace("Hi there!", `Hi there ${userName}!`);
+                formattedText = formattedText.replace("Glad that you are here.", `Glad that you are here, ${userName}.`);
+            }
+
+            msgDiv.innerHTML = formattedText; // Use innerHTML for formatted content
+
+            messagesEl.appendChild(msgDiv);
+            messagesEl.scrollTop = messagesEl.scrollHeight;
+        }
+
+        function formatBotMessage(text) {
+            // 1. Escape HTML to prevent XSS
+            let safeText = document.createElement('p');
+            safeText.textContent = text;
+            safeText = safeText.innerHTML; // Now it's safely escaped
+
+            // 2. Apply bold formatting to headers
+            safeText = safeText.replace(/🔎 What we’re solving:/g, '<strong>🔎 What we’re solving:</strong>');
+            safeText = safeText.replace(/✅ What to focus on:/g, '<strong>✅ What to focus on:</strong>');
+            safeText = safeText.replace(/❓ What next:/g, '<strong>❓ What next:</strong>');
+
+            // 3. Wrap in paragraphs for better structure
+            return `<p>${safeText.replace(/\n\n/g, '</p><p>')}</p>`;
+        }
+
+        function addErrorMessage(message) {
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'error-message';
+            errorDiv.textContent = message;
+            messagesEl.appendChild(errorDiv);
+            messagesEl.scrollTop = messagesEl.scrollHeight;
+        }
+
+        function showTypingIndicator(show) {
+            const existingIndicator = document.querySelector('.typing-indicator');
+            if (show) {
+                if (!existingIndicator) {
+                    const typingDiv = document.createElement('div');
+                    typingDiv.className = 'msg bot typing-indicator';
+                    typingDiv.textContent = 'Prodify is typing...';
+                    messagesEl.appendChild(typingDiv);
+                    messagesEl.scrollTop = messagesEl.scrollHeight;
+                }
+            } else {
+                if (existingIndicator) {
+                    existingIndicator.remove();
+                }
+            }
+        }
+
+        function showLeadForm() {
+            const formHTML = `
+                <form id="lead-form">
+                  <p><strong>Let me have your details and we can continue to chat.</strong></p>
+                  <input id="lead-name" type="text" placeholder="Your Name" required />
+                  <input id="lead-email" type="email" placeholder="Your Email" required />
+                  <textarea id="lead-details" rows="3" placeholder="Describe what you need" required></textarea>
+                  <button type="submit">Submit</button>
+                </form>`;
+            
+            const formContainer = document.createElement('div');
+            formContainer.className = 'msg bot';
+            formContainer.innerHTML = formHTML;
+            messagesEl.appendChild(formContainer);
+            messagesEl.scrollTop = messagesEl.scrollHeight;
+
+            document.getElementById('lead-form').addEventListener('submit', submitLeadForm);
+        }
+
+        async function submitLeadForm(e) {
+            e.preventDefault();
+            const form = e.target;
+            form.querySelector('button').disabled = true;
+            form.querySelector('button').textContent = 'Submitting...';
+
+            const name = document.getElementById('lead-name').value.trim();
+            const email = document.getElementById('lead-email').value.trim();
+            const details = document.getElementById('lead-details').value.trim();
+
+            // Store user name for personalization
+            userName = name.split(' ')[0]; // Take only the first name
+            sessionStorage.setItem("user_name", userName);
+
+            try {
+                const res = await fetch(`${BASE_URL}/lead`, {
+                    method: "POST",
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ session_id: sessionId, name, email, details })
+                });
+
+                if (!res.ok) {
+                    const errorData = await res.json().catch(() => ({ detail: 'An unknown error occurred.' }));
+                    throw new Error(errorData.detail);
+                }
+
+                form.parentElement.remove();
+                addMessage(`Thanks ${userName}! Now, what's the biggest challenge in your business right now?`);
+                setInputState(true);
+
+            } catch (err) {
+                addErrorMessage(`Failed to submit: ${err.message}`);
+                form.querySelector('button').disabled = false;
+                form.querySelector('button').textContent = 'Submit';
+            }
+        }
+
+        async function sendMessage() {
+            const text = inputEl.value.trim();
+            if (!text) return;
+
+            addMessage(text, 'user');
+            inputEl.value = '';
+            setInputState(false, "Waiting for response...");
+            showTypingIndicator(true);
+
+            try {
+                const res = await fetch(`${BASE_URL}/chat`, {
+                    method: "POST",
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ session_id: sessionId, message: text })
+                });
+
+                showTypingIndicator(false);
+
+                if (!res.ok) {
+                    if (res.status === 429) {
+                        addErrorMessage("You've reached the message limit for this session. Thank you for chatting!");
+                        setInputState(false, "Message limit reached.");
+                    } else {
+                        const errorData = await res.json().catch(() => ({ detail: 'Could not connect to the server.' }));
+                        throw new Error(errorData.detail);
+                    }
+                } else {
+                    const { reply } = await res.json();
+                    addMessage(reply);
+                    setInputState(true);
+                }
+
+            } catch (err) {
+                showTypingIndicator(false);
+                addErrorMessage(err.message);
+                setInputState(true); // Re-enable input even on error
+            }
+        }
+
+        // Start the chat
+        sendBtn.addEventListener('click', sendMessage);
+        inputEl.addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); } });
+
+        // New initial flow
+        addMessage("Glad that you are here. How can I help you?");
+        showLeadForm();
+    });
   </script>
 </body>
 </html>
